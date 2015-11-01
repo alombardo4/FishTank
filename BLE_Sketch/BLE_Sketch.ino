@@ -42,7 +42,7 @@ int in1 = 0;
 int in2 = 0;
 int in3 = 0;
 int in4 = 0;
-int mode = 0;
+int mode = -1;
 
 void setup() 
 {
@@ -52,7 +52,7 @@ void setup()
   ble_set_pins(7, 6);
 
   ble_begin();
-  
+  colorWipe(255,0,0,255);
 }
 
 void loop() 
@@ -81,16 +81,22 @@ void loop()
       setTime(in1, in2, 0, 1, 1, 2015);
     }
     
+  } else {
+    //process modes if no ble
+    if (mode == 0) {
+        time_t t = now();  
+      if (second(t) == 0) {
+        timeColor(t);
+      }
+    } else if (mode == -1) {
+      colorWipe(255,0,0,255);
+    }
   }
 
   ble_do_events();
 
-  if (mode == 0) {
-      time_t t = now();  
-    if (second(t) == 0) {
-      timeColor(t);
-    }
-  }
+
+
 
 
   
