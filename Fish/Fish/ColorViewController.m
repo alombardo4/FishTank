@@ -48,4 +48,9 @@
     [self.tabBar.vc.peripheral writeValue:nsData forCharacteristic:self.tabBar.vc.txCharacteristic type:CBCharacteristicWriteWithoutResponse];
     
 }
+
+- (IBAction)disconnect:(id)sender {
+    [self.tabBar.vc disconnect];
+    [self performSegueWithIdentifier:@"disconnectColor" sender:self];
+}
 @end

@@ -16,5 +16,6 @@
 @property (weak, nonatomic) IBOutlet UISlider *blueSlider;
 @property (weak, nonatomic) IBOutlet UISlider *brightSlider;
 - (IBAction)sliderMoved:(id)sender;
+- (IBAction)disconnect:(id)sender;
 
 @end

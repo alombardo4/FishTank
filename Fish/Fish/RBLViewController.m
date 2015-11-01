@@ -8,6 +8,7 @@
 
 #import "RBLViewController.h"
 #import "TabBarViewController.h"
+#import "AppDelegate.h"
 
 #define RBL_SERVICE_UUID                    @"713d0000-503e-4c75-ba94-3148f18d941e"
 #define RBL_TX_UUID                         @"713d0003-503e-4c75-ba94-3148f18d941e"
@@ -24,6 +25,8 @@
 	// Do any additional setup after loading the view, typically from a nib.
     
     self.centralManager = [[CBCentralManager alloc] initWithDelegate:self queue:nil];
+    AppDelegate *app = [[UIApplication sharedApplication] delegate];
+    app.vc = self;
 }
 
 - (void)didReceiveMemoryWarning
@@ -41,6 +44,14 @@
         [self.connBtn setTitle:@"Connecting" forState:UIControlStateNormal];
         [self.connBtn setEnabled:NO];
         [self.spinner startAnimating];
+    }
+}
+
+-(void) disconnect
+{
+    NSLog(@"Disconnecting");
+    if (self.peripheral.state == CBPeripheralStateConnected) {
+        [self.centralManager cancelPeripheralConnection:self.peripheral];
     }
 }
 

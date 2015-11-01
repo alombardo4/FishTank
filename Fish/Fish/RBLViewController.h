@@ -19,4 +19,5 @@
 @property (strong, nonatomic) IBOutlet UIActivityIndicatorView *spinner;
 
 - (IBAction)doConnBtn:(id)sender;
+-(void) disconnect;
 @end

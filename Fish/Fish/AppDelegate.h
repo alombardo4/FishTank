@@ -7,11 +7,12 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "RBLViewController.h"
 
 @interface AppDelegate : UIResponder <UIApplicationDelegate>
 
 @property (strong, nonatomic) UIWindow *window;
-
+@property RBLViewController *vc;
 
 @end
 

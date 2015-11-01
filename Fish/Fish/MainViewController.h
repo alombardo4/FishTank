@@ -14,5 +14,6 @@
 - (IBAction)offPressed:(id)sender;
 - (IBAction)whitePressed:(id)sender;
 @property TabBarViewController* tabBar;
+- (IBAction)disconnect:(id)sender;
 
 @end
