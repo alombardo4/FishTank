@@ -1,13 +1,7 @@
 #include <Time.h>
-
 #include <RBL_nRF8001.h>
-
-
 #include <boards.h>
-
-
-
-
+#include <LiquidCrystal.h>
 #include <Adafruit_NeoPixel.h>
 
 /*
@@ -43,16 +37,24 @@ int in2 = 0;
 int in3 = 0;
 int in4 = 0;
 int mode = -1;
+int lastMinute, lastHour = 0;
+LiquidCrystal lcd(10,9,4,2,1,0);
+time_t lastFed;
+int button1Pin = 5;
+int lastR, lastG, lastB, lastBr;
 
 void setup() 
 {
-  Serial.begin(9600);
+  pinMode(button1Pin, INPUT);
   strip.begin();
   strip.show(); // Initialize all pixels to 'off'
   ble_set_pins(7, 6);
 
   ble_begin();
   colorWipe(255,0,0,255);
+  lcd.begin(16, 2);
+  lcd.clear();
+  lcd.print("TankMon");
 }
 
 void loop() 
@@ -83,8 +85,9 @@ void loop()
     
   } else {
     //process modes if no ble
+    
     if (mode == 0) {
-        time_t t = now();  
+      time_t t = now(); 
       if (second(t) == 0) {
         timeColor(t);
       }
@@ -95,9 +98,44 @@ void loop()
 
   ble_do_events();
 
+  //write time to display
+  time_t t = now();
+  if (hour(t) != lastHour || minute(t) != lastMinute) {
+    displayTime(1,0,t);
+    lastHour = hour(t);
+    lastMinute = minute(t);
+  }
 
+  //write mode to display
+  lcd.setCursor(13,0);
+  lcd.print(getMode());
+  
+  //button input for feeding
+  if (digitalRead(button1Pin) == LOW) {
+    lastFed = now();
+    lcd.setCursor(8,1);
+    lcd.print("LF:");
+    displayTime(1,11,lastFed);
+  }
 
-
+  //flash for feeding needed
+  int lastHr = hour(lastFed);
+  int nowHr = hour(t);
+  //if more than 14 hour difference 
+  if (second(t) % 10 == 0) {
+    if (lastHr > nowHr) {
+      int diff24 = 24 - lastHr;
+      if (diff24 + nowHr > 14) {
+        //feed me
+        foodLightFlash();
+      }
+    } else if (nowHr - lastHr > 14) {
+      //feed me
+      foodLightFlash();
+    }
+  }
+  
+  
 
   
   
@@ -106,6 +144,13 @@ void loop()
 // Fill the dots one after the other with a color
 void colorWipe(int r, int g, int b, int brightness) 
 {
+  lastR = r;
+  lastG = g;
+  lastB = b;
+  lastBr = brightness;
+  if (brightness > 220) {
+    brightness = 220;
+  }
   r = (int) (((double) brightness/255) * r);
   g = (int) (((double) brightness/255) * g);
   b = (int) (((double) brightness/255) * b);
@@ -120,17 +165,87 @@ void colorWipe(int r, int g, int b, int brightness)
 }
 
 void timeColor(time_t t) {
-  if ((hour(t) >= 2 && hour(t) < 6) || (hour(t) >= 22 && hour(t) <= 22)) {
-    //late/early
-    colorWipe(255,255,255,128);
-  } else if ((hour(t) < 2 && hour(t) >= 0) || (hour(t) > 22 && hour(t) <= 24)) {
-    //night
-    colorWipe(255,255,255,25);
-  } else {
-    //day
-    colorWipe(255,255,255,255);
-  }
-  
 
+  int currentHour = hour(t);
+  //night low power
+  if (currentHour >= 22 || (currentHour >= 0 && currentHour <= 4)) 
+  {
+    colorWipe(255,255,190,25);
+  }
+
+  //evening/morning
+  else if ((currentHour >= 20 && currentHour < 22) || (currentHour > 4 && currentHour <= 6))
+  {
+    colorWipe(255, 255, 190, 140);
+  }
+  // daytime
+  else
+  {
+    colorWipe(255,255,190,200);
+  }
+}
+
+String getMode() {
+
+    if (mode == 0) {
+      return "STD";
+    } else if (mode == 1) {
+      return "COL";
+    } else if (mode == 2) {
+      return "OFF";
+    } else if (mode == -1) {
+      return "RBT";
+    }else {
+      return "OTH";
+    }
+}
+
+//requires 5 screen positions
+void displayTime(int startHeight, int startIndex, time_t t) {
+        lcd.setCursor(startIndex,startHeight);
+      lcd.print("  ");
+      lcd.setCursor(startIndex,startHeight);
+      int hr = hour(t);
+      if (hr < 10) {
+        lcd.print(" ");
+        lcd.print(hr);
+      } else {
+        lcd.print(hr);
+      }
+      
+      lcd.setCursor(startIndex+2,startHeight);
+      lcd.print(":");
+      lcd.setCursor(startIndex+3,startHeight);
+      lcd.print("  ");
+      lcd.setCursor(startIndex+3,startHeight);
+      int min = minute(t);
+      if (min < 10) {
+        lcd.print("0");
+        lcd.print(min);
+      } else {
+        lcd.print(min);
+      }
+
+}
+
+void foodLightFlash() {
+  uint32_t c = strip.Color(255, 0, 0);
+  for(uint16_t i=0; i<strip.numPixels(); i++) 
+  {
+    
+      strip.setPixelColor(i, c);
+      delay(50);
+      strip.show();
+  }
+
+  c = strip.Color(0, 0, 255);
+  for(uint16_t i=0; i<strip.numPixels(); i++) 
+  {
+    
+      strip.setPixelColor(i, c);
+      delay(50);
+      strip.show();
+  }
+  colorWipe(lastR, lastG, lastB, lastBr);
 }
 
