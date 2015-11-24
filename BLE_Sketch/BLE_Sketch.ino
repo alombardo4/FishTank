@@ -118,6 +118,7 @@ void loop()
     displayTime(1,11,lastFed);
   }
 
+  /*
   //flash for feeding needed
   int lastHr = hour(lastFed);
   int nowHr = hour(t);
@@ -134,7 +135,7 @@ void loop()
       foodLightFlash();
     }
   }
-  
+  */
   
 
   
